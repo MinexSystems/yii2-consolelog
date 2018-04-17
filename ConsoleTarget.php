@@ -30,6 +30,8 @@ class ConsoleTarget extends Target
     public $dateFormat = 'Y-m-d H:i:s';
 
     public $padSize = 30;
+    
+    public $renderObject = true;
 
     /**
      * @var array color scheme for message labels
@@ -53,6 +55,12 @@ class ConsoleTarget extends Target
     public function export()
     {
         foreach ($this->messages as $message) {
+            if(is_object($message[0]) and $this->renderObject == true) {
+                $label = $this->generateLabel($message);
+                $text = $this->convertObjectToString($message[0]);
+                Console::error(str_pad($label, $this->padSize, ' ') .' '.$text);
+                continue;
+            }
             if ($message[1] == Logger::LEVEL_ERROR) {
                 Console::error($this->formatMessage($message));
             } else {
@@ -131,5 +139,18 @@ class ConsoleTarget extends Target
             }
         }
         return $text;
+    }
+    
+    private function convertObjectToString($object)
+    {
+        $message = '';
+        if ($object instanceof \Exception) {
+            $message .= $object->getMessage()." \n\nin "
+                . $object->getFile() . ':' . $object->getLine() . "\n\n"
+                . "Stack trace:\n" . $object->getTraceAsString();
+        } else {
+            $message = serialize($object);
+        }
+        return $message;
     }
 }

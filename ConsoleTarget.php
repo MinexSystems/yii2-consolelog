@@ -8,6 +8,7 @@ namespace pahanini\log;
 
 use Yii;
 use yii\helpers\Console;
+use yii\helpers\VarDumper;
 use yii\log\Logger;
 use yii\log\Target;
 
@@ -55,12 +56,6 @@ class ConsoleTarget extends Target
     public function export()
     {
         foreach ($this->messages as $message) {
-            if(is_object($message[0]) and $this->renderObject == true) {
-                $label = $this->generateLabel($message);
-                $text = $this->convertObjectToString($message[0]);
-                Console::error(str_pad($label, $this->padSize, ' ') .' '.$text);
-                continue;
-            }
             if ($message[1] == Logger::LEVEL_ERROR) {
                 Console::error($this->formatMessage($message));
             } else {
@@ -96,12 +91,14 @@ class ConsoleTarget extends Target
     private function generateLabel($message)
     {
         $label = '';
-
+        
         //Add date to log
         if (true == $this->displayDate) {
-            $label.= '['.date($this->dateFormat, $message[3]).']';
+            $label.= sprintf('[%.1fMB/%.2fs]', $message[5] / 1024 / 1024, $message[3] - YII_BEGIN_TIME);
         }
 
+        
+        
         //Add category to label
         if (true == $this->displayCategory) {
             $label.= "[".$message[2]."]";
